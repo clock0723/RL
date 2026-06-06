@@ -17,34 +17,34 @@
         <geom name="floor" type="plane" size="100 100 2" material="grey" friction="2 0.035 0.0001"/>
         <light directional="true" diffuse="1 1 1" pos="0 0 10" dir="0 0 -1"/>
         
-        <body name="box" pos="0 0 1.2">
-            <joint name="root" type="free"/>
-            <geom type="box" size="0.6 0.5 0.4" material="red" mass="2.5"/>
+        <body name="box" pos="0 0 1.22">
+            <joint name="root" type="free" damping="0.5"/>
+            <geom type="box" size="0.6 0.4 0.3" material="red" mass="1.5"/>
 
             <!-- 左腿 -->
-            <body name="left_upper_leg" pos="-0.7 0.0 0.0">
-                <joint name="left" type="hinge" axis="1 0 0" pos="0 0 0" range="-60 60" damping="0.07"/>
+            <body name="left_upper_leg" pos="-0.7 0.15 0.0">
+                <joint name="left" type="hinge" axis="1 0 0" pos="0 0 0" range="-60 60" damping="0.1"/>
                 <geom name="left_upper_leg_geom" type="capsule" fromto="0.0 0.0 0.0 0.0 0.0 -0.5" size="0.1" material="red" mass="0.5"/>
                 <body name="left_leg" pos="0 0 -0.5">
-                    <joint name="left2" type="hinge" axis="1 0 0" range="-60 60"damping="0.02"/>
-                    <geom name="left_leg_geom" type="capsule" fromto="0.0 0.0 0.0 0.0 0.0 -0.5" size="0.1" material="red" mass="0.2"/>
+                    <joint name="left2" type="hinge" axis="1 0 0" range="-60 60" damping="0.02"/>
+                    <geom name="left_leg_geom" type="capsule" fromto="0.0 0.0 0.0 0.0 0.0 -0.5" size="0.1" material="red" mass="0.3"/>
                     <body name="left_wheel" pos="0 0 -0.5">
-                        <joint name="left_wheel_joint" type="hinge" axis="1 0 0" damping="0.01"/>
-                        <geom type="cylinder" size="0.2 0.1" material="red" euler="0 90 0" mass="0.24" friction="2 0.035 0.0001"/>
+                        <joint name="left_wheel_joint" type="hinge" axis="1 0 0" damping="0.3"/>
+                        <geom type="cylinder" size="0.2 0.15" material="red" euler="0 90 0" mass="0.24" friction="2 0.035 0.0001"/>
                     </body>
                 </body>
             </body>
             
             <!-- 右腿 -->
-            <body name="right_upper_leg" pos="0.7 0.0 0.0">
-                <joint name="right" type="hinge" axis="1 0 0" pos="0 0 0" range="-60 60" damping="0.07"/>
+            <body name="right_upper_leg" pos="0.7 -0.15 0.0">
+                <joint name="right" type="hinge" axis="1 0 0" pos="0 0 0" range="-60 60" damping="0.1"/>
                 <geom name="right_upper_leg_geom" type="capsule" fromto="0.0 0.0 0.0 0.0 0.0 -0.5" size="0.1" material="red" mass="0.5"/>
                 <body name="right_leg" pos="0 0 -0.5">
                     <joint name="right2" type="hinge" axis="1 0 0" range="-60 60" damping="0.02"/>
-                    <geom name="right_leg_geom" type="capsule" fromto="0.0 0.0 0.0 0.0 0.0 -0.5" size="0.1" material="red" mass="0.2"/>
+                    <geom name="right_leg_geom" type="capsule" fromto="0.0 0.0 0.0 0.0 0.0 -0.5" size="0.1" material="red" mass="0.3"/>
                     <body name="right_wheel" pos="0 0 -0.5">
-                        <joint name="right_wheel_joint" type="hinge" axis="1 0 0" damping="0.01"/>
-                        <geom type="cylinder" size="0.2 0.1" material="red" euler="0 90 0" mass="0.24" friction="2 0.035 0.0001"/>
+                        <joint name="right_wheel_joint" type="hinge" axis="1 0 0" damping="0.3"/>
+                        <geom type="cylinder" size="0.2 0.15" material="red" euler="0 90 0" mass="0.24" friction="2 0.035 0.0001"/>
                     </body>
                 </body>
             </body>
@@ -52,14 +52,14 @@
     </worldbody>
     
     <actuator>
-        <motor name="left_upper_leg_motor" joint="left" gear="20" />
-        <motor name="left_leg_motor" joint="left2" gear="10" />
-        <motor name="left_wheel_motor" joint="left_wheel_joint" gear="10" />
-        <motor name="right_upper_leg_motor" joint="right" gear="20" />
-        <motor name="right_leg_motor" joint="right2" gear="10" />
-        <motor name="right_wheel_motor" joint="right_wheel_joint" gear="10" />
+        <motor name="left_upper_leg_motor" joint="left" gear="80" />
+        <motor name="left_leg_motor" joint="left2" gear="30" />
+        <motor name="left_wheel_motor" joint="left_wheel_joint" gear="3" />
+        <motor name="right_upper_leg_motor" joint="right" gear="80" />
+        <motor name="right_leg_motor" joint="right2" gear="30" />
+        <motor name="right_wheel_motor" joint="right_wheel_joint" gear="3" />
     </actuator>
-
+  
 <contact>
     <exclude name="box_left_leg" body1="box" body2="left_upper_leg"/>
     <exclude name="box_right_leg" body1="box" body2="right_upper_leg"/>

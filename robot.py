@@ -31,6 +31,9 @@ class Env(MujocoEnv):
             render_mode=render_mode
         )
         self.init_x = 0.0
+        self.reward_mean = 0.0
+        self.reward_var = 1.0
+        self.reward_count = 1e-4
 
         names = self.model.names
         if isinstance(names, (bytes, bytearray)):
@@ -62,25 +65,42 @@ class Env(MujocoEnv):
         return obs.astype(np.float32)
 
     def reward(self, obs, action):
-        # 1. 主要目标：站稳，惩罚俯仰角和反转角
-        body_angle = mujoco.mju_quat2Euler(self.data.qpos[3:7])
-        roll = body_angle[0]
-        pitch = body_angle[1]
-        stand_reward = 1.0 - (roll ** 2 + pitch ** 2)
+        d = self.data
+        # 直接从 qpos 读取姿态，避免重复计算
+        body_quat = d.qpos[3:7]
+        roll, pitch, yaw = mujoco.mju_quat2Euler(body_quat)
 
-        # 2. 动作成本（重要！）
-        ctrl_cost = 0.01 * np.sum(np.square(action))  # 权重调小一点
+        # 1. 直立奖励：惩罚 roll 和 pitch 的平方，角度越小越好
+        upright_penalty = 0.5 * (roll**2 + pitch**2)
 
-        # 3. 生存奖励（每步固定）
-        survive_reward = 0.5
+        # 2. 角速度惩罚：避免快速旋转
+        body_angvel = d.qvel[3:6]  # wx, wy, wz
+        angvel_penalty = 0.01 * np.sum(np.square(body_angvel))
 
-        # 4. 前进奖励（可选，如果希望移动）
-        #forward_reward = 2.0 * (self.data.qpos[0] - self.init_x) / self.dt  # x 方向的前进奖励
-        
-        
+        # 3. 高度奖励：躯干 z 坐标保持在一定高度以上
+        target_height = 1.2          # 初始高度
+        height = d.qpos[2]
+        height_penalty = 0.5 * np.square(max(0.0, target_height - height))
 
-        # 总奖励
-        reward = stand_reward + survive_reward - ctrl_cost + forward_reward
+        # 4. 前进速度奖励：希望 x 方向速度稳定在 0.5 m/s 附近
+        vel_x = d.qvel[0]            # 世界坐标系下前进速度
+        target_vel = 0.5
+        forward_reward = 1.0 * np.exp(-5.0 * (vel_x - target_vel)**2)
+
+        # 5. 动作成本
+        ctrl_cost = 0.02 * np.sum(np.square(action))
+
+        # 6. 生存奖励
+        survive_reward = 0.2
+
+        reward = (
+            survive_reward
+            + forward_reward
+            - upright_penalty
+            - angvel_penalty
+            - height_penalty
+            - ctrl_cost
+        )
         return reward
 
     def _get_knee_height(self):
@@ -93,6 +113,11 @@ class Env(MujocoEnv):
         self.do_simulation(action, self.frame_skip)
         obs = self.get_obs()
         reward = self.reward(obs, action)
+        delta = reward - self.reward_mean
+        self.reward_count += 1
+        self.reward_mean += delta / self.reward_count
+        self.reward_var += delta * (reward - self.reward_mean)
+        reward = (reward - self.reward_mean) / np.sqrt(self.reward_var / self.reward_count + 1e-8)
         terminated = self.check_terminated()
         truncated = False
         if self.render_mode == "human":
